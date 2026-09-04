@@ -1,0 +1,2 @@
+[console_scripts]
+engine-dns3700-sync = engine_dns3700_sync.__main__:main
