@@ -304,7 +304,8 @@ class EngineDatabase:
             perf_track_id = _choose(performance_columns, "trackId", "track_id")
             perf_quick = _choose(performance_columns, "quickCues", "quick_cues")
             perf_loops = _choose(performance_columns, "loops", "savedLoops", "saved_loops", "loopPoints", "loop_points", "loopBlob", "loop_blob")
-            if perf_track_id and (perf_quick or perf_loops):
+            perf_overview_waveform = _choose(performance_columns, "overviewWaveFormData", "overview_waveform_data")
+            if perf_track_id and (perf_quick or perf_loops or perf_overview_waveform):
                 sql += f' LEFT JOIN "PerformanceData" p ON p."{perf_track_id}" = t."id"'
                 if perf_quick:
                     select_columns.append(f'p."{perf_quick}" AS "perf_quickCues"')
@@ -312,6 +313,9 @@ class EngineDatabase:
                 if perf_loops:
                     select_columns.append(f'p."{perf_loops}" AS "perf_loops"')
                     row_columns.add("perf_loops")
+                if perf_overview_waveform:
+                    select_columns.append(f'p."{perf_overview_waveform}" AS "perf_overviewWaveFormData"')
+                    row_columns.add("perf_overviewWaveFormData")
             if playlist_id:
                 mapping_info = self._playlist_mapping_table(connection, tables)
                 if not mapping_info:
@@ -398,5 +402,6 @@ class EngineDatabase:
             quick_cues=quick_cues,
             loops=loops,
             main_cue_sample_offset=main_cue,
+            overview_waveform=value("perf_overviewWaveFormData", "overviewWaveFormData", "overview_waveform_data"),
             warnings=warnings,
         )

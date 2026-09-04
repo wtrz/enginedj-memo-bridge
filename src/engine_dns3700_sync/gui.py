@@ -5,7 +5,7 @@ from pathlib import Path
 import subprocess
 
 from PySide6.QtCore import QObject, QRunnable, QSettings, Qt, QThreadPool, QDate, QPoint, Signal, Slot
-from PySide6.QtGui import QColor
+from PySide6.QtGui import QColor, QPainter, QPainterPath, QPen
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QHeaderView,
     QLabel,
+    QListWidget,
     QLineEdit,
     QMainWindow,
     QMenu,
@@ -35,6 +36,7 @@ from PySide6.QtWidgets import (
 from .engine_db import EngineDatabase, default_engine_database
 from .models import EnginePlaylist, MappingSource, ScanResult, SlotMappings, SourceKind, SyncOptions
 from .sync_service import SyncService
+from .waveform import ddj_markers_from_positions, decode_ddm_waveform, decode_engine_overview_waveform, waveform_markers_from_sample_offsets
 
 
 class WorkerSignals(QObject):
@@ -59,6 +61,120 @@ class Worker(QRunnable):
             self.signals.error.emit(str(exc))
 
 
+class EngineWaveformWidget(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._points: list[tuple[int, int, int]] = []
+        self._maximum_point: tuple[int, int, int] = (255, 255, 255)
+        self._markers: list[float] = []
+        self.setMinimumHeight(120)
+
+    def set_waveform(
+        self,
+        points: list[tuple[int, int, int]],
+        markers: list[float],
+        maximum_point: tuple[int, int, int] = (255, 255, 255),
+    ):
+        self._points = points
+        self._maximum_point = maximum_point
+        self._markers = [marker for marker in markers if 0.0 <= marker <= 1.0]
+        self.update()
+
+    def _build_band_path(self, values: list[float], baseline: float, width: int, scale: float) -> QPainterPath:
+        path = QPainterPath()
+        path.moveTo(0, baseline)
+        for x, value in enumerate(values):
+            path.lineTo(x, baseline - (value * scale))
+        path.lineTo(width - 1, baseline)
+        path.closeSubpath()
+        return path
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        painter.fillRect(self.rect(), QColor("#111418"))
+        if not self._points:
+            painter.setPen(QColor("#7f8c8d"))
+            painter.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, "No EngineDJ waveform available")
+            return
+
+        width = max(self.width(), 1)
+        height = max(self.height(), 1)
+        baseline = height * 0.82
+        count = len(self._points)
+        low_values: list[float] = []
+        mid_values: list[float] = []
+        high_values: list[float] = []
+        for x in range(width):
+            start = x * count // width
+            end = max(start + 1, (x + 1) * count // width)
+            bucket = self._points[start:end]
+            low = max(point[0] for point in bucket)
+            mid = max(point[1] for point in bucket)
+            high = max(point[2] for point in bucket)
+            combined = max(low, mid, high)
+            low_values.append(combined / max(self._maximum_point[0], self._maximum_point[1], self._maximum_point[2], 1))
+            mid_values.append(max(low, mid) / max(self._maximum_point[0], self._maximum_point[1], 1))
+            high_values.append(high / max(self._maximum_point[2], 1))
+
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(QColor("#1c46dd"))
+        painter.drawPath(self._build_band_path(low_values, baseline, width, height * 0.70))
+        painter.setBrush(QColor("#1de05f"))
+        painter.drawPath(self._build_band_path(mid_values, baseline, width, height * 0.55))
+        painter.setBrush(QColor("#f4fff8"))
+        painter.drawPath(self._build_band_path(high_values, baseline - 1, width, height * 0.16))
+
+        painter.setPen(QPen(QColor("#31424f"), 1))
+        painter.drawLine(0, int(baseline), width, int(baseline))
+
+        marker_pen = QPen(QColor("#ff5a5f"), 2)
+        painter.setPen(marker_pen)
+        for marker in self._markers:
+            x = int(marker * (width - 1))
+            painter.drawLine(x, 0, x, height)
+
+
+class DDJWaveformWidget(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._values: list[int] = []
+        self._markers: list[float] = []
+        self.setMinimumHeight(90)
+
+    def set_waveform(self, values: list[int], markers: list[float]):
+        self._values = values
+        self._markers = [marker for marker in markers if 0.0 <= marker <= 1.0]
+        self.update()
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.fillRect(self.rect(), QColor("#0f1013"))
+        if not self._values:
+            painter.setPen(QColor("#7f8c8d"))
+            painter.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, "No DDJMMAN waveform available")
+            return
+
+        width = max(self.width(), 1)
+        height = max(self.height(), 1)
+        baseline = height - 10
+        count = len(self._values)
+        painter.setPen(QPen(QColor("#80aaff"), 1))
+        for x in range(width):
+            start = x * count // width
+            end = max(start + 1, (x + 1) * count // width)
+            value = max(self._values[start:end])
+            bar_height = (value / 15.0) * (height - 18)
+            painter.drawLine(x, int(baseline - bar_height), x, int(baseline))
+
+        painter.setPen(QPen(QColor("#31424f"), 1))
+        painter.drawLine(0, int(baseline), width, int(baseline))
+        painter.setPen(QPen(QColor("#ff5a5f"), 2))
+        for marker in self._markers:
+            x = int(marker * (width - 1))
+            painter.drawLine(x, 0, x, height)
+
+
 class MainWindow(QMainWindow):
     SETTINGS_ORG = "EngineDN3700Sync"
     SETTINGS_APP = "EngineDN-S3700Sync"
@@ -69,7 +185,7 @@ class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Engine DJ → DN-S3700 ID3 Sync")
+        self.setWindowTitle("Engine DJ → DDJMMAN ID3 Sync")
         self.resize(1180, 760)
         self.settings = QSettings(self.SETTINGS_ORG, self.SETTINGS_APP)
         self.thread_pool = QThreadPool.globalInstance()
@@ -117,7 +233,7 @@ class MainWindow(QMainWindow):
         filter_layout.addLayout(playlist_filter_layout)
         root.addWidget(filter_group)
 
-        mapping_group = QGroupBox("DN-S3700 mapping")
+        mapping_group = QGroupBox("DDJMMAN mapping")
         mapping_layout = QFormLayout(mapping_group)
         self.cue_combo = self._make_combo(self._cue_sources())
         self.slot1_combo = self._make_combo(self._slot_sources())
@@ -155,7 +271,7 @@ class MainWindow(QMainWindow):
 
         action_layout = QHBoxLayout()
         self.scan_button = QPushButton("Scan")
-        self.sync_button = QPushButton("Sync selected ID3 tags")
+        self.sync_button = QPushButton("Sync selected DDJMMAN ID3 tags")
         self.sync_button.setEnabled(False)
         self.scan_button.clicked.connect(self._scan)
         self.sync_button.clicked.connect(self._sync)
@@ -185,7 +301,31 @@ class MainWindow(QMainWindow):
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.table.customContextMenuRequested.connect(self._show_table_context_menu)
-        root.addWidget(self.table, 1)
+        self.table.itemSelectionChanged.connect(self._update_selected_track_details)
+
+        content_layout = QHBoxLayout()
+        content_layout.addWidget(self.table, 2)
+
+        details_group = QGroupBox("Selected track details")
+        details_layout = QVBoxLayout(details_group)
+        self.selected_track_title = QLabel("Select a track to inspect EngineDJ and DDJMMAN data")
+        self.selected_track_meta = QLabel("")
+        self.selected_track_waveform_status = QLabel("EngineDJ overview waveform: unavailable")
+        self.selected_track_waveform = EngineWaveformWidget()
+        self.selected_track_ddj_waveform_status = QLabel("DDJMMAN waveform: unavailable")
+        self.selected_track_ddj_waveform = DDJWaveformWidget()
+        self.selected_track_cues = QListWidget()
+        details_layout.addWidget(self.selected_track_title)
+        details_layout.addWidget(self.selected_track_meta)
+        details_layout.addWidget(self.selected_track_waveform_status)
+        details_layout.addWidget(self.selected_track_waveform)
+        details_layout.addWidget(self.selected_track_ddj_waveform_status)
+        details_layout.addWidget(self.selected_track_ddj_waveform)
+        details_layout.addWidget(QLabel("Hot cues"))
+        details_layout.addWidget(self.selected_track_cues, 1)
+
+        content_layout.addWidget(details_group, 1)
+        root.addLayout(content_layout, 1)
         self._apply_default_column_widths()
 
         status_layout = QHBoxLayout()
@@ -520,8 +660,8 @@ class MainWindow(QMainWindow):
             set_cell(14, result.current_fields.get("DDJ/L1AT_L1BT", ""))
             set_cell(15, result.planned_fields.get("DDJ/STUP", ""))
             set_cell(16, result.current_fields.get("DDJ/STUP", ""))
-            set_cell(17, result.planned_fields.get("DDM/WAVE", "missing"))
-            set_cell(18, result.current_fields.get("DDM/WAVE", "missing"))
+            set_cell(17, result.planned_fields.get("DDM/WAVE_DISPLAY", "missing"))
+            set_cell(18, result.current_fields.get("DDM/WAVE_DISPLAY", "missing"))
             warning_text = "; ".join(result.warnings + ([result.error] if result.error else []))
             set_cell(19, ", ".join(result.differences))
             set_cell(20, warning_text)
@@ -550,6 +690,73 @@ class MainWindow(QMainWindow):
         if row < 0 or row >= len(self.scan_results):
             return None
         return self.scan_results[row]
+
+    def _selected_result(self) -> ScanResult | None:
+        row = self.table.currentRow()
+        if row < 0 or row >= len(self.scan_results):
+            return None
+        return self.scan_results[row]
+
+    def _update_selected_track_details(self):
+        result = self._selected_result()
+        if not result:
+            self.selected_track_title.setText("Select a track to inspect EngineDJ and DDJMMAN data")
+            self.selected_track_meta.setText("")
+            self.selected_track_waveform_status.setText("EngineDJ overview waveform: unavailable")
+            self.selected_track_waveform.set_waveform([], [])
+            self.selected_track_ddj_waveform_status.setText("DDJMMAN waveform: unavailable")
+            self.selected_track_ddj_waveform.set_waveform([], [])
+            self.selected_track_cues.clear()
+            return
+
+        track = result.track
+        self.selected_track_title.setText(f"{track.artist or 'Unknown artist'} — {track.title or track.path.name}")
+        self.selected_track_meta.setText(
+            f"Path: {track.path}\n"
+            f"BPM: {track.bpm or '-'}    Key: {track.key or '-'}    Sample rate: {track.sample_rate or '-'}"
+        )
+        waveform_size = len(track.overview_waveform) if track.overview_waveform else 0
+        self.selected_track_waveform_status.setText(
+            f"EngineDJ overview waveform: {'available' if waveform_size else 'unavailable'}"
+            + (f" ({waveform_size} bytes)" if waveform_size else "")
+        )
+        waveform = decode_engine_overview_waveform(track.overview_waveform)
+        total_samples = waveform.samples_per_point * len(waveform.points)
+        sample_offsets: list[float] = []
+        if track.main_cue_sample_offset is not None:
+            sample_offsets.append(track.main_cue_sample_offset)
+        sample_offsets.extend(cue.sample_offset for cue in track.quick_cues)
+        markers = waveform_markers_from_sample_offsets(sample_offsets, total_samples)
+        self.selected_track_waveform.set_waveform(waveform.points, markers, waveform.maximum_point)
+        current_wave_value = result.current_fields.get("DDM/WAVE", "")
+        planned_wave_value = result.planned_fields.get("DDM/WAVE", "")
+        ddj_fields = result.planned_fields if result.needs_update else result.current_fields
+        ddj_bytes = []
+        if result.needs_update and planned_wave_value not in {"", "missing"} and not planned_wave_value.startswith("invalid"):
+            ddj_bytes = decode_ddm_waveform(planned_wave_value)
+        elif current_wave_value not in {"", "missing"} and not current_wave_value.startswith("invalid"):
+            ddj_bytes = decode_ddm_waveform(current_wave_value)
+        ddj_markers = ddj_markers_from_positions(
+            [
+                ddj_fields.get("DDJ/CUET", ""),
+                ddj_fields.get("DDJ/H1PT", ""),
+                ddj_fields.get("DDJ/H2PT", ""),
+                ddj_fields.get("DDJ/H3PT", ""),
+            ],
+            ddj_duration=int(ddj_fields.get("DDJ/DUR", "0") or 0),
+        )
+        self.selected_track_ddj_waveform_status.setText(
+            "DDJMMAN waveform: "
+            + (f"available ({len(ddj_bytes)} bytes)" if ddj_bytes else result.current_fields.get("DDM/WAVE_DISPLAY", "missing"))
+        )
+        self.selected_track_ddj_waveform.set_waveform(ddj_bytes, ddj_markers)
+        self.selected_track_cues.clear()
+        if track.main_cue_sample_offset is not None:
+            self.selected_track_cues.addItem(f"Main cue: sample {track.main_cue_sample_offset:.0f}")
+        for cue in sorted(track.quick_cues, key=lambda item: item.slot):
+            self.selected_track_cues.addItem(
+                f"Hot Cue {cue.slot}: sample {cue.sample_offset:.0f}" + (f" — {cue.label}" if cue.label else "")
+            )
 
     def _show_table_context_menu(self, position: QPoint):
         result = self._selected_result_for_position(position)

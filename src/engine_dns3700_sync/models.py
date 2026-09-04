@@ -89,6 +89,7 @@ class EngineTrack:
     quick_cues: list[QuickCue] = field(default_factory=list)
     loops: list[SavedLoop] = field(default_factory=list)
     main_cue_sample_offset: float | None = None
+    overview_waveform: bytes | None = None
     warnings: list[str] = field(default_factory=list)
 
     @property

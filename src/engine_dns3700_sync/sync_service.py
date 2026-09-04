@@ -21,17 +21,25 @@ def _wave_status(existing) -> str:
     return f"invalid ({existing.waveform_length} bytes)"
 
 
+def _wave_display_value(value: str) -> str:
+    if not value:
+        return "missing"
+    return f"{len(value.encode('latin-1', errors='replace'))} bytes"
+
+
 def _current_denon_fields(existing) -> dict[str, str]:
     txxx = existing.txxx
     loop_parts = [part for part in (txxx.get("DDJ/L1AT", ""), txxx.get("DDJ/L1BT", "")) if part]
     return {
+        "DDJ/DUR": txxx.get("DDJ/DUR", ""),
         "DDJ/CUET": txxx.get("DDJ/CUET", ""),
         "DDJ/H1PT": txxx.get("DDJ/H1PT", ""),
         "DDJ/H2PT": txxx.get("DDJ/H2PT", ""),
         "DDJ/H3PT": txxx.get("DDJ/H3PT", ""),
         "DDJ/L1AT_L1BT": " / ".join(loop_parts),
         "DDJ/STUP": txxx.get("DDJ/STUP", ""),
-        "DDM/WAVE": _wave_status(existing),
+        "DDM/WAVE": txxx.get("DDM/WAVE", "") if existing.waveform_length == 320 else _wave_status(existing),
+        "DDM/WAVE_DISPLAY": _wave_display_value(txxx.get("DDM/WAVE", "")) if existing.waveform_length == 320 else _wave_status(existing),
     }
 
 
@@ -39,13 +47,15 @@ def _planned_denon_fields(plan) -> dict[str, str]:
     txxx = plan.txxx
     loop_parts = [part for part in (txxx.get("DDJ/L1AT", ""), txxx.get("DDJ/L1BT", "")) if part]
     return {
+        "DDJ/DUR": txxx.get("DDJ/DUR", ""),
         "DDJ/CUET": txxx.get("DDJ/CUET", ""),
         "DDJ/H1PT": txxx.get("DDJ/H1PT", ""),
         "DDJ/H2PT": txxx.get("DDJ/H2PT", ""),
         "DDJ/H3PT": txxx.get("DDJ/H3PT", ""),
         "DDJ/L1AT_L1BT": " / ".join(loop_parts),
         "DDJ/STUP": txxx.get("DDJ/STUP", ""),
-        "DDM/WAVE": "320 bytes" if "DDM/WAVE" in txxx else "missing",
+        "DDM/WAVE": txxx.get("DDM/WAVE", "") if "DDM/WAVE" in txxx else "missing",
+        "DDM/WAVE_DISPLAY": _wave_display_value(txxx.get("DDM/WAVE", "")) if "DDM/WAVE" in txxx else "missing",
     }
 
 

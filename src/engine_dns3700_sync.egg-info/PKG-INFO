@@ -15,9 +15,9 @@ Requires-Dist: pytest>=8.0; extra == "dev"
 Requires-Dist: pyinstaller>=6.0; extra == "dev"
 Dynamic: license-file
 
-# Engine DJ → DN-S3700 ID3 Sync
+# Engine DJ → DDJMMAN ID3 Sync
 
-A Windows-oriented manual GUI sync tool that reads Engine DJ's SQLite database **read-only** and writes DN-S3700 / Denon DJ Music Manager style ID3 data into the original MP3 files before an Engine DJ USB export.
+A Windows-oriented manual GUI sync tool that reads Engine DJ's SQLite database **read-only** and writes DDJMMAN / legacy Denon DN-S3700-style ID3 data into the original MP3 files before an Engine DJ USB export.
 
 ## Current MVP
 
@@ -39,6 +39,16 @@ A Windows-oriented manual GUI sync tool that reads Engine DJ's SQLite database *
 - Optional full-file backup.
 - Creates an approximate 320-byte `DDM/WAVE` waveform when missing.
 - Generates a schema report to diagnose future Engine DJ schema changes.
+
+### Current waveform understanding
+
+- EngineDJ overview waveforms appear to store three-band magnitude points plus timing metadata.
+- Community DDJMMAN / DN-style waveform observations suggest the rendered colours roughly track these frequency regions:
+  - blue: ~20-500 Hz
+  - green: ~500-2000 Hz
+  - white: ~2000-20000 Hz
+- The visual result appears blended rather than using perfectly hard crossover boundaries.
+- The current `DDM/WAVE` writer is still approximate and should not yet be treated as a confirmed frequency-band-faithful reproduction of Denon DJ Music Manager output.
 
 ## Known Denon tag mapping
 

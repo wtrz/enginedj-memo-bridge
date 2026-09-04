@@ -21,3 +21,5 @@ tests/test_denon_plan.py
 tests/test_engine_blobs.py
 tests/test_engine_db.py
 tests/test_smart_mapping.py
+tests/test_sync_service.py
+tests/test_waveform.py
