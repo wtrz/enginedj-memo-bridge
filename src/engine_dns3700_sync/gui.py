@@ -5,6 +5,7 @@ from pathlib import Path
 import subprocess
 
 from PySide6.QtCore import QObject, QRunnable, QSettings, Qt, QThreadPool, QDate, QPoint, Signal, Slot
+from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -62,6 +63,9 @@ class MainWindow(QMainWindow):
     SETTINGS_ORG = "EngineDN3700Sync"
     SETTINGS_APP = "EngineDN-S3700Sync"
     TABLE_HEADER_STATE_VERSION = 2
+    UPDATE_ROW_COLOR = QColor("#FFF7E6")
+    ERROR_ROW_COLOR = QColor("#FDECEC")
+    CHANGED_CELL_COLOR = QColor("#FFF2A8")
 
     def __init__(self):
         super().__init__()
@@ -475,33 +479,68 @@ class MainWindow(QMainWindow):
     def _populate_table(self, results: list[ScanResult]):
         self.table.setRowCount(len(results))
         for row, result in enumerate(results):
+            row_color = self.ERROR_ROW_COLOR if result.error else (self.UPDATE_ROW_COLOR if result.needs_update else None)
+
+            def set_cell(column: int, text: str) -> QTableWidgetItem:
+                item = QTableWidgetItem(text)
+                if row_color is not None:
+                    item.setBackground(row_color)
+                self.table.setItem(row, column, item)
+                return item
+
+            def highlight_pair(engine_column: int, id3_column: int, key: str):
+                if key in result.differences:
+                    engine_item = self.table.item(row, engine_column)
+                    id3_item = self.table.item(row, id3_column)
+                    if engine_item:
+                        engine_item.setBackground(self.CHANGED_CELL_COLOR)
+                    if id3_item:
+                        id3_item.setBackground(self.CHANGED_CELL_COLOR)
+
             check = QTableWidgetItem()
             check.setFlags(check.flags() | Qt.ItemFlag.ItemIsUserCheckable)
             check.setCheckState(Qt.CheckState.Checked if result.needs_update else Qt.CheckState.Unchecked)
+            if row_color is not None:
+                check.setBackground(row_color)
             self.table.setItem(row, 0, check)
-            self.table.setItem(row, 1, QTableWidgetItem(result.status))
+            set_cell(1, result.status)
             edited = result.track.last_edit_time.strftime("%Y-%m-%d %H:%M") if result.track.last_edit_time else ""
-            self.table.setItem(row, 2, QTableWidgetItem(edited))
-            self.table.setItem(row, 3, QTableWidgetItem(result.track.artist))
-            self.table.setItem(row, 4, QTableWidgetItem(result.track.title))
-            self.table.setItem(row, 5, QTableWidgetItem(result.planned_fields.get("DDJ/CUET", "")))
-            self.table.setItem(row, 6, QTableWidgetItem(result.current_fields.get("DDJ/CUET", "")))
-            self.table.setItem(row, 7, QTableWidgetItem(result.planned_fields.get("DDJ/H1PT", "")))
-            self.table.setItem(row, 8, QTableWidgetItem(result.current_fields.get("DDJ/H1PT", "")))
-            self.table.setItem(row, 9, QTableWidgetItem(result.planned_fields.get("DDJ/H2PT", "")))
-            self.table.setItem(row, 10, QTableWidgetItem(result.current_fields.get("DDJ/H2PT", "")))
-            self.table.setItem(row, 11, QTableWidgetItem(result.planned_fields.get("DDJ/H3PT", "")))
-            self.table.setItem(row, 12, QTableWidgetItem(result.current_fields.get("DDJ/H3PT", "")))
-            self.table.setItem(row, 13, QTableWidgetItem(result.planned_fields.get("DDJ/L1AT_L1BT", "")))
-            self.table.setItem(row, 14, QTableWidgetItem(result.current_fields.get("DDJ/L1AT_L1BT", "")))
-            self.table.setItem(row, 15, QTableWidgetItem(result.planned_fields.get("DDJ/STUP", "")))
-            self.table.setItem(row, 16, QTableWidgetItem(result.current_fields.get("DDJ/STUP", "")))
-            self.table.setItem(row, 17, QTableWidgetItem(result.planned_fields.get("DDM/WAVE", "missing")))
-            self.table.setItem(row, 18, QTableWidgetItem(result.current_fields.get("DDM/WAVE", "missing")))
+            set_cell(2, edited)
+            set_cell(3, result.track.artist)
+            set_cell(4, result.track.title)
+            set_cell(5, result.planned_fields.get("DDJ/CUET", ""))
+            set_cell(6, result.current_fields.get("DDJ/CUET", ""))
+            set_cell(7, result.planned_fields.get("DDJ/H1PT", ""))
+            set_cell(8, result.current_fields.get("DDJ/H1PT", ""))
+            set_cell(9, result.planned_fields.get("DDJ/H2PT", ""))
+            set_cell(10, result.current_fields.get("DDJ/H2PT", ""))
+            set_cell(11, result.planned_fields.get("DDJ/H3PT", ""))
+            set_cell(12, result.current_fields.get("DDJ/H3PT", ""))
+            set_cell(13, result.planned_fields.get("DDJ/L1AT_L1BT", ""))
+            set_cell(14, result.current_fields.get("DDJ/L1AT_L1BT", ""))
+            set_cell(15, result.planned_fields.get("DDJ/STUP", ""))
+            set_cell(16, result.current_fields.get("DDJ/STUP", ""))
+            set_cell(17, result.planned_fields.get("DDM/WAVE", "missing"))
+            set_cell(18, result.current_fields.get("DDM/WAVE", "missing"))
             warning_text = "; ".join(result.warnings + ([result.error] if result.error else []))
-            self.table.setItem(row, 19, QTableWidgetItem(", ".join(result.differences)))
-            self.table.setItem(row, 20, QTableWidgetItem(warning_text))
-            self.table.setItem(row, 21, QTableWidgetItem(str(result.track.path)))
+            set_cell(19, ", ".join(result.differences))
+            set_cell(20, warning_text)
+            set_cell(21, str(result.track.path))
+
+            highlight_pair(5, 6, "DDJ/CUET")
+            highlight_pair(7, 8, "DDJ/H1PT")
+            highlight_pair(9, 10, "DDJ/H2PT")
+            highlight_pair(11, 12, "DDJ/H3PT")
+            highlight_pair(13, 14, "DDJ/L1AT")
+            highlight_pair(13, 14, "DDJ/L1BT")
+            highlight_pair(15, 16, "DDJ/STUP")
+            if any(key in result.differences for key in ("DDM/WAVE", "DDM/WAVE regenerate", "DDM/WAVE missing/invalid")):
+                engine_wave = self.table.item(row, 17)
+                id3_wave = self.table.item(row, 18)
+                if engine_wave:
+                    engine_wave.setBackground(self.CHANGED_CELL_COLOR)
+                if id3_wave:
+                    id3_wave.setBackground(self.CHANGED_CELL_COLOR)
 
     def _selected_result_for_position(self, position: QPoint) -> ScanResult | None:
         item = self.table.itemAt(position)
