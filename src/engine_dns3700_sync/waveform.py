@@ -61,7 +61,7 @@ def _band_mask(frequencies: np.ndarray, low_hz: float, high_hz: float) -> np.nda
 def _window_band_levels(segment: np.ndarray, sample_rate: int) -> tuple[float, float, float, float]:
     if segment.size == 0:
         return (0.0, 0.0, 0.0, 0.0)
-    mono = np.max(np.abs(segment), axis=1).astype(np.float32)
+    mono = np.mean(segment.astype(np.float32), axis=1)
     if mono.size == 0:
         return (0.0, 0.0, 0.0, 0.0)
 
