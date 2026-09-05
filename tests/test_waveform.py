@@ -66,6 +66,20 @@ def test_normalise_levels_returns_ddj_waveform_byte_range():
     assert values[0] < values[1] < values[2]
 
 
+def test_normalise_levels_preserves_contrast_between_quiet_and_loud_sections():
+    values = _normalise_levels([
+        (0.03, 0.02, 0.01, 0.00),
+        (0.10, 0.07, 0.04, 0.01),
+        (0.45, 0.25, 0.20, 0.08),
+        (0.95, 0.50, 0.40, 0.15),
+    ])
+
+    assert values[0] <= 2
+    assert values[1] < values[2]
+    assert values[2] <= 11
+    assert values[3] >= 13
+
+
 def test_ddj_markers_from_positions_uses_id3_cue_units_and_duration():
     markers = ddj_markers_from_positions(["900", "1800", "", "bad", "3600"], 300)
 

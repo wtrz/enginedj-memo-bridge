@@ -59,6 +59,16 @@ def _planned_denon_fields(plan) -> dict[str, str]:
     }
 
 
+def _scan_planned_denon_fields(plan, options: SyncOptions, existing) -> dict[str, str]:
+    fields = _planned_denon_fields(plan)
+    if options.force_regenerate_waveform:
+        fields["DDM/WAVE"] = existing.txxx.get("DDM/WAVE", "") if existing.waveform_length == 320 else ""
+        fields["DDM/WAVE_DISPLAY"] = "regenerate on sync"
+    elif options.write_waveform_if_missing and existing.waveform_length != 320 and "DDM/WAVE" not in plan.txxx:
+        fields["DDM/WAVE_DISPLAY"] = "generate on sync"
+    return fields
+
+
 def _none_source() -> MappingSource:
     return MappingSource(SourceKind.NONE)
 
@@ -159,7 +169,7 @@ class SyncService:
                 status="Update required" if needs_update else "Up to date",
                 needs_update=needs_update,
                 differences=sorted(set(differences + [_mapping_summary(mappings)] if self.options.smart_mapping else differences)),
-                planned_fields=_planned_denon_fields(plan),
+                planned_fields=_scan_planned_denon_fields(plan, self.options, existing),
                 current_fields=_current_denon_fields(existing),
                 warnings=plan.warnings,
             )

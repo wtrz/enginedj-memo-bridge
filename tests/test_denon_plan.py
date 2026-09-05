@@ -37,7 +37,11 @@ def test_mapping_to_denon_frames():
     assert plan.txxx["DDJ/H1PT"] == "1800"
     assert plan.txxx["DDJ/H2PT"] == "2700"
     assert plan.txxx["DDJ/H2AP"] == "1280"
+    assert "DDJ/H2BT" not in plan.txxx
+    assert "DDJ/H2LN" not in plan.txxx
+    assert "DDJ/H2SZ" not in plan.txxx
     assert plan.txxx["DDJ/L1AT"] == "2700"
     assert plan.txxx["DDJ/L1BT"] == "4500"
     assert plan.txxx["DDJ/STUP"].endswith("1 2 0 ")
     assert plan.standard_text["TBPM"] == "01280"
+    assert not any("Auto Loop stores start+BPM only" in warning for warning in plan.warnings)

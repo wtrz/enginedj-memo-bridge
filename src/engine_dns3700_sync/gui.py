@@ -345,12 +345,12 @@ class MainWindow(QMainWindow):
     def _slot_sources(self):
         result = [("None", "none"), ("Engine main cue", "main_cue")]
         result += [(f"Engine Hot Cue {i} → Hot Start", f"hot_cue:{i}") for i in range(1, 9)]
-        result += [(f"Engine Saved Loop {i} → Auto Loop", f"saved_loop:{i}") for i in range(1, 9)]
+        result += [(f"Engine Saved Loop {i} → Auto Loop start+BPM only", f"saved_loop:{i}") for i in range(1, 9)]
         return result
 
     def _loop_sources(self):
         return [("None", "none")] + [
-            (f"Engine Saved Loop {i}", f"saved_loop:{i}") for i in range(1, 9)
+            (f"Engine Saved Loop {i} → A/B Loop exact start/end", f"saved_loop:{i}") for i in range(1, 9)
         ]
 
     def _make_combo(self, entries):
@@ -747,7 +747,10 @@ class MainWindow(QMainWindow):
         )
         self.selected_track_ddj_waveform_status.setText(
             "DDJMMAN waveform: "
-            + (f"available ({len(ddj_bytes)} bytes)" if ddj_bytes else result.current_fields.get("DDM/WAVE_DISPLAY", "missing"))
+            + (
+                f"available ({len(ddj_bytes)} bytes)"
+                if ddj_bytes else result.planned_fields.get("DDM/WAVE_DISPLAY", result.current_fields.get("DDM/WAVE_DISPLAY", "missing"))
+            )
         )
         self.selected_track_ddj_waveform.set_waveform(ddj_bytes, ddj_markers)
         self.selected_track_cues.clear()

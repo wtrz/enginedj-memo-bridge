@@ -185,9 +185,6 @@ def build_tag_plan(
             if bpm_value:
                 txxx[f"DDJ/H{slot_number}AP"] = bpm_value
             slot_types.append("2")
-            warnings.append(
-                f"DN slot {slot_number} uses experimental Auto Loop mapping; exact loop length is not encoded yet"
-            )
 
     if "DDJ/STUP" not in existing.txxx:
         warnings.append("DDJ/STUP prefix uses the provisional default derived from the captured DN-S3700 file")

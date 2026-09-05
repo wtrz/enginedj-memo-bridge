@@ -103,8 +103,8 @@ def _normalise_levels(levels: list[tuple[float, float, float, float]]) -> list[i
     def norm(values: np.ndarray) -> np.ndarray:
         if not np.any(values > 0):
             return np.zeros_like(values)
-        reference = max(float(np.percentile(values, 95)), float(np.max(values)) * 0.35, 1e-9)
-        return np.clip(values / reference, 0.0, 1.35)
+        reference = max(float(np.percentile(values, 99)), float(np.max(values)) * 0.75, 1e-9)
+        return np.clip(values / reference, 0.0, 1.10)
 
     broadband_n = norm(broadband)
     low_n = norm(low)
@@ -117,7 +117,8 @@ def _normalise_levels(levels: list[tuple[float, float, float, float]]) -> list[i
         + mid_n * 0.22
         + high_n * 0.13
     )
-    score = np.power(np.clip(score, 0.0, 1.0), 0.82)
+    score = np.clip((score - 0.08) / 0.92, 0.0, 1.0)
+    score = np.power(score, 1.35)
     quantized = np.clip(np.rint(1.0 + score * 14.0), 1, 15).astype(np.uint8)
     return quantized.tolist()
 
