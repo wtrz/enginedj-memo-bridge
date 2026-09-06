@@ -68,6 +68,7 @@ Public Windows builds are unsigned unless a release explicitly says otherwise. W
 - Optionally filters tracks by Engine DJ playlist.
 - Maps Engine DJ main cue, Hot Cues 1-8 and Saved Loops 1-8 to legacy Denon memo targets.
 - Supports smart mapping for common cue/loop layouts.
+- Uses an EngineDJ-inspired dark interface theme.
 - Scans first and shows only actual ID3 differences.
 - Requires confirmation before writing selected ID3 changes.
 - Writes source MP3 files atomically and verifies written tags.

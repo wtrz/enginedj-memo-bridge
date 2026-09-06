@@ -6,7 +6,7 @@ import subprocess
 import sys
 
 from PySide6.QtCore import QObject, QRunnable, QSettings, Qt, QThreadPool, QDate, QPoint, Signal, Slot
-from PySide6.QtGui import QColor, QIcon, QPainter, QPainterPath, QPen
+from PySide6.QtGui import QColor, QIcon, QPainter, QPainterPath, QPalette, QPen
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -49,6 +49,169 @@ def app_icon_path() -> Path:
 def app_icon() -> QIcon:
     icon_path = app_icon_path()
     return QIcon(str(icon_path)) if icon_path.exists() else QIcon()
+
+
+def apply_engine_dark_theme(app: QApplication):
+    app.setStyle("Fusion")
+
+    palette = QPalette()
+    palette.setColor(QPalette.ColorRole.Window, QColor("#0B0F14"))
+    palette.setColor(QPalette.ColorRole.WindowText, QColor("#E7EDF3"))
+    palette.setColor(QPalette.ColorRole.Base, QColor("#111820"))
+    palette.setColor(QPalette.ColorRole.AlternateBase, QColor("#17212B"))
+    palette.setColor(QPalette.ColorRole.ToolTipBase, QColor("#17212B"))
+    palette.setColor(QPalette.ColorRole.ToolTipText, QColor("#E7EDF3"))
+    palette.setColor(QPalette.ColorRole.Text, QColor("#E7EDF3"))
+    palette.setColor(QPalette.ColorRole.Button, QColor("#17212B"))
+    palette.setColor(QPalette.ColorRole.ButtonText, QColor("#E7EDF3"))
+    palette.setColor(QPalette.ColorRole.BrightText, QColor("#FFFFFF"))
+    palette.setColor(QPalette.ColorRole.Link, QColor("#2EA8FF"))
+    palette.setColor(QPalette.ColorRole.Highlight, QColor("#0078D4"))
+    palette.setColor(QPalette.ColorRole.HighlightedText, QColor("#FFFFFF"))
+    palette.setColor(QPalette.ColorRole.PlaceholderText, QColor("#8292A2"))
+    app.setPalette(palette)
+
+    app.setStyleSheet(
+        """
+        QMainWindow, QDialog {
+            background-color: #0B0F14;
+            color: #E7EDF3;
+        }
+
+        QWidget {
+            color: #E7EDF3;
+            selection-background-color: #0078D4;
+            selection-color: #FFFFFF;
+        }
+
+        QGroupBox {
+            background-color: #101720;
+            border: 1px solid #263342;
+            border-radius: 8px;
+            font-weight: 700;
+            margin-top: 12px;
+            padding: 12px 10px 10px 10px;
+        }
+
+        QGroupBox::title {
+            color: #A9D8FF;
+            left: 12px;
+            padding: 0 6px;
+            subcontrol-origin: margin;
+        }
+
+        QLineEdit, QComboBox, QDateEdit, QTextEdit {
+            background-color: #111820;
+            border: 1px solid #314052;
+            border-radius: 5px;
+            color: #E7EDF3;
+            padding: 5px 7px;
+        }
+
+        QLineEdit:focus, QComboBox:focus, QDateEdit:focus, QTextEdit:focus {
+            border-color: #2EA8FF;
+        }
+
+        QComboBox::drop-down, QDateEdit::drop-down {
+            border-left: 1px solid #314052;
+            width: 24px;
+        }
+
+        QComboBox QAbstractItemView {
+            background-color: #111820;
+            border: 1px solid #314052;
+            color: #E7EDF3;
+            selection-background-color: #0078D4;
+        }
+
+        QPushButton {
+            background-color: #17212B;
+            border: 1px solid #314052;
+            border-radius: 6px;
+            color: #E7EDF3;
+            padding: 6px 12px;
+        }
+
+        QPushButton:hover {
+            background-color: #203040;
+            border-color: #2EA8FF;
+        }
+
+        QPushButton:pressed {
+            background-color: #0E141B;
+        }
+
+        QPushButton:disabled {
+            background-color: #121820;
+            border-color: #202A36;
+            color: #65717E;
+        }
+
+        QCheckBox {
+            spacing: 7px;
+        }
+
+        QCheckBox::indicator {
+            background-color: #111820;
+            border: 1px solid #3A4A5E;
+            border-radius: 3px;
+            height: 14px;
+            width: 14px;
+        }
+
+        QCheckBox::indicator:checked {
+            background-color: #0078D4;
+            border-color: #2EA8FF;
+        }
+
+        QTableWidget {
+            background-color: #0F151D;
+            alternate-background-color: #121B25;
+            border: 1px solid #263342;
+            gridline-color: #263342;
+            color: #E7EDF3;
+            selection-background-color: #004E8C;
+            selection-color: #FFFFFF;
+        }
+
+        QTableCornerButton::section, QHeaderView::section {
+            background-color: #17212B;
+            border: 0;
+            border-bottom: 1px solid #314052;
+            border-right: 1px solid #263342;
+            color: #D6E6F2;
+            font-weight: 700;
+            padding: 5px;
+        }
+
+        QProgressBar {
+            background-color: #111820;
+            border: 1px solid #314052;
+            border-radius: 5px;
+            color: #E7EDF3;
+            text-align: center;
+        }
+
+        QProgressBar::chunk {
+            background-color: #0078D4;
+            border-radius: 4px;
+        }
+
+        QMenu {
+            background-color: #111820;
+            border: 1px solid #314052;
+            color: #E7EDF3;
+        }
+
+        QMenu::item:selected {
+            background-color: #0078D4;
+        }
+
+        QMessageBox QLabel {
+            color: #E7EDF3;
+        }
+        """
+    )
 
 
 class WorkerSignals(QObject):
@@ -191,9 +354,9 @@ class MainWindow(QMainWindow):
     SETTINGS_ORG = "EngineDJMemoBridge"
     SETTINGS_APP = "EngineDJMemoBridge"
     TABLE_HEADER_STATE_VERSION = 2
-    UPDATE_ROW_COLOR = QColor("#FFF7E6")
-    ERROR_ROW_COLOR = QColor("#FDECEC")
-    CHANGED_CELL_COLOR = QColor("#FFF2A8")
+    UPDATE_ROW_COLOR = QColor("#2B2414")
+    ERROR_ROW_COLOR = QColor("#351B1F")
+    CHANGED_CELL_COLOR = QColor("#3A310F")
 
     def __init__(self):
         super().__init__()
@@ -403,9 +566,9 @@ class MainWindow(QMainWindow):
                 background-color: #004E8C;
             }
             QPushButton#primaryWorkflowButton:disabled {
-                background-color: #B8C7D8;
-                border-color: #AAB8C6;
-                color: #F3F6F8;
+                background-color: #17212B;
+                border-color: #263342;
+                color: #65717E;
             }
             """
         )
@@ -427,9 +590,9 @@ class MainWindow(QMainWindow):
                 background-color: #0F5132;
             }
             QPushButton#syncWorkflowButton:disabled {
-                background-color: #D5D8DC;
-                border-color: #C3C7CB;
-                color: #7B858E;
+                background-color: #17212B;
+                border-color: #263342;
+                color: #65717E;
             }
             """
         )
@@ -896,6 +1059,7 @@ class MainWindow(QMainWindow):
 
 def run_gui() -> int:
     app = QApplication.instance() or QApplication([])
+    apply_engine_dark_theme(app)
     app.setWindowIcon(app_icon())
     window = MainWindow()
     window.show()
