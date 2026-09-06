@@ -1,2 +1,0 @@
-[console_scripts]
-enginedj-memo-bridge = enginedj_memo_bridge.__main__:main
