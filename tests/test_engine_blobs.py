@@ -1,7 +1,7 @@
 import struct
 import zlib
 
-from engine_dns3700_sync.engine_blobs import parse_loops, parse_quick_cues
+from enginedj_memo_bridge.engine_blobs import parse_loops, parse_quick_cues
 
 
 def compressed(payload: bytes) -> bytes:

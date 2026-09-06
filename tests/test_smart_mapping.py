@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from engine_dns3700_sync.models import EngineTrack, QuickCue, SavedLoop, SlotMappings, SourceKind, SyncOptions
-from engine_dns3700_sync.sync_service import _resolved_mappings
+from enginedj_memo_bridge.models import EngineTrack, QuickCue, SavedLoop, SlotMappings, SourceKind, SyncOptions
+from enginedj_memo_bridge.sync_service import _resolved_mappings
 
 
 def test_smart_mapping_prefers_main_then_hot_cues_then_loop_one_for_ab():

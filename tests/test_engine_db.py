@@ -1,7 +1,7 @@
 import sqlite3
 from pathlib import Path
 
-from engine_dns3700_sync.engine_db import EngineDatabase
+from enginedj_memo_bridge.engine_db import EngineDatabase
 
 
 def test_row_to_track_accepts_alias_blob_columns(tmp_path: Path):

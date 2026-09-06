@@ -3,7 +3,7 @@ import zlib
 
 import numpy as np
 
-from engine_dns3700_sync.waveform import (
+from enginedj_memo_bridge.waveform import (
     _normalise_levels,
     _window_band_levels,
     ddj_markers_from_positions,

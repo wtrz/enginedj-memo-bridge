@@ -1,8 +1,8 @@
 Metadata-Version: 2.4
-Name: engine-dns3700-sync
+Name: enginedj-memo-bridge
 Version: 0.1.0
-Summary: Manual GUI sync from Engine DJ database data to DN-S3700-compatible ID3 tags
-Author: Engine DN-S3700 Sync contributors
+Summary: EngineDJ to DDJMMAN memo sync for Denon-compatible MP3 ID3 tags
+Author: EngineDJ Memo Bridge contributors
 License: MIT
 Requires-Python: >=3.11
 Description-Content-Type: text/markdown
@@ -15,9 +15,9 @@ Requires-Dist: pytest>=8.0; extra == "dev"
 Requires-Dist: pyinstaller>=6.0; extra == "dev"
 Dynamic: license-file
 
-# Engine DJ → DDJMMAN ID3 Sync
+# EngineDJ Memo Bridge
 
-A Windows-oriented manual GUI sync tool that reads Engine DJ's SQLite database **read-only** and writes DDJMMAN / legacy Denon DN-S3700-style ID3 data into the original MP3 files before an Engine DJ USB export.
+EngineDJ Memo Bridge is a Windows-oriented manual GUI sync tool that reads Engine DJ's SQLite database **read-only** and writes DDJMMAN / legacy Denon DN-S3700-style memo data into the original MP3 files before an Engine DJ USB export.
 
 ## Current MVP
 
@@ -75,9 +75,9 @@ Current inspected DN-S3700 memo files show numbered Auto Loop slots storing the 
 Install Python 3.11+ and ffmpeg. Ensure `ffmpeg.exe` is on `PATH`.
 
 ```powershell
-cd engine-dns3700-sync
+cd enginedj-memo-bridge
 py -m pip install -e .
-py -m engine_dns3700_sync
+py -m enginedj_memo_bridge
 ```
 
 Or run `run.bat`.

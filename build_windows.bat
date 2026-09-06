@@ -2,5 +2,5 @@
 setlocal
 cd /d "%~dp0"
 py -m pip install -e ".[dev]"
-pyinstaller --noconfirm --clean --windowed --name Engine-DNS3700-Sync --paths src src\engine_dns3700_sync\__main__.py
+pyinstaller --noconfirm --clean --windowed --name EngineDJ-Memo-Bridge --paths src src\enginedj_memo_bridge\__main__.py
 endlocal

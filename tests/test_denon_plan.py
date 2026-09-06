@@ -2,8 +2,8 @@ from pathlib import Path
 
 from mutagen.id3 import ID3
 
-from engine_dns3700_sync.denon_tags import build_tag_plan, read_existing_tags, write_plan_atomic
-from engine_dns3700_sync.models import (
+from enginedj_memo_bridge.denon_tags import build_tag_plan, read_existing_tags, write_plan_atomic
+from enginedj_memo_bridge.models import (
     EngineTrack,
     ExistingTags,
     MappingSource,
@@ -13,7 +13,7 @@ from engine_dns3700_sync.models import (
     SourceKind,
     SyncOptions,
 )
-from engine_dns3700_sync.mp3_frames import MpegInfo
+from enginedj_memo_bridge.mp3_frames import MpegInfo
 
 
 def test_mapping_to_denon_frames():

@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from engine_dns3700_sync.engine_db import EngineDatabase, default_engine_database
+from enginedj_memo_bridge.engine_db import EngineDatabase, default_engine_database
 
 
 def main() -> int:

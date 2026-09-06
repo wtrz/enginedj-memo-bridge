@@ -176,8 +176,8 @@ class DDJWaveformWidget(QWidget):
 
 
 class MainWindow(QMainWindow):
-    SETTINGS_ORG = "EngineDN3700Sync"
-    SETTINGS_APP = "EngineDN-S3700Sync"
+    SETTINGS_ORG = "EngineDJMemoBridge"
+    SETTINGS_APP = "EngineDJMemoBridge"
     TABLE_HEADER_STATE_VERSION = 2
     UPDATE_ROW_COLOR = QColor("#FFF7E6")
     ERROR_ROW_COLOR = QColor("#FDECEC")
@@ -185,7 +185,7 @@ class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Engine DJ → DDJMMAN ID3 Sync")
+        self.setWindowTitle("EngineDJ Memo Bridge")
         self.resize(1180, 760)
         self.settings = QSettings(self.SETTINGS_ORG, self.SETTINGS_APP)
         self.thread_pool = QThreadPool.globalInstance()
@@ -513,7 +513,7 @@ class MainWindow(QMainWindow):
         )
 
     def _options(self) -> SyncOptions:
-        backup_dir = Path.home() / "Music" / "DN-S3700 Sync Backups"
+        backup_dir = Path.home() / "Music" / "EngineDJ Memo Bridge Backups"
         return SyncOptions(
             write_waveform_if_missing=self.waveform_missing.isChecked(),
             force_regenerate_waveform=self.force_waveform.isChecked(),
