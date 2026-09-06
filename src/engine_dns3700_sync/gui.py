@@ -211,6 +211,10 @@ class MainWindow(QMainWindow):
         database_layout.addWidget(schema_button)
         root.addWidget(database_group)
 
+        top_layout = QHBoxLayout()
+        controls_layout = QVBoxLayout()
+        top_layout.addLayout(controls_layout, 2)
+
         filter_group = QGroupBox("Filter")
         filter_layout = QVBoxLayout(filter_group)
         date_filter_layout = QHBoxLayout()
@@ -231,7 +235,7 @@ class MainWindow(QMainWindow):
         playlist_filter_layout.addWidget(self.use_playlist)
         playlist_filter_layout.addWidget(self.playlist_combo, 1)
         filter_layout.addLayout(playlist_filter_layout)
-        root.addWidget(filter_group)
+        controls_layout.addWidget(filter_group)
 
         mapping_group = QGroupBox("DDJMMAN mapping")
         mapping_layout = QFormLayout(mapping_group)
@@ -248,7 +252,7 @@ class MainWindow(QMainWindow):
         mapping_layout.addRow("DN A/B loop", self.ab_combo)
         mapping_layout.addRow("", self.smart_mapping)
         self.smart_mapping.toggled.connect(self._update_mapping_controls)
-        root.addWidget(mapping_group)
+        controls_layout.addWidget(mapping_group)
 
         options_group = QGroupBox("Write options")
         options_layout = QHBoxLayout(options_group)
@@ -267,7 +271,7 @@ class MainWindow(QMainWindow):
         options_layout.addWidget(self.rewrite_metadata)
         options_layout.addWidget(self.experimental_loops)
         options_layout.addWidget(self.backup)
-        root.addWidget(options_group)
+        controls_layout.addWidget(options_group)
 
         action_layout = QHBoxLayout()
         self.scan_button = QPushButton("Scan")
@@ -280,7 +284,28 @@ class MainWindow(QMainWindow):
         action_layout.addWidget(self.scan_button)
         action_layout.addWidget(self.sync_button)
         action_layout.addStretch(1)
-        root.addLayout(action_layout)
+        controls_layout.addLayout(action_layout)
+        controls_layout.addStretch(1)
+
+        details_group = QGroupBox("Selected track details")
+        details_layout = QVBoxLayout(details_group)
+        self.selected_track_title = QLabel("Select a track to inspect EngineDJ and DDJMMAN data")
+        self.selected_track_meta = QLabel("")
+        self.selected_track_waveform_status = QLabel("EngineDJ overview waveform: unavailable")
+        self.selected_track_waveform = EngineWaveformWidget()
+        self.selected_track_ddj_waveform_status = QLabel("DDJMMAN waveform: unavailable")
+        self.selected_track_ddj_waveform = DDJWaveformWidget()
+        self.selected_track_cues = QListWidget()
+        details_layout.addWidget(self.selected_track_title)
+        details_layout.addWidget(self.selected_track_meta)
+        details_layout.addWidget(self.selected_track_waveform_status)
+        details_layout.addWidget(self.selected_track_waveform)
+        details_layout.addWidget(self.selected_track_ddj_waveform_status)
+        details_layout.addWidget(self.selected_track_ddj_waveform)
+        details_layout.addWidget(QLabel("Hot cues"))
+        details_layout.addWidget(self.selected_track_cues, 1)
+        top_layout.addWidget(details_group, 1)
+        root.addLayout(top_layout)
 
         self.table = QTableWidget(0, 22)
         self.table.setHorizontalHeaderLabels([
@@ -303,29 +328,7 @@ class MainWindow(QMainWindow):
         self.table.customContextMenuRequested.connect(self._show_table_context_menu)
         self.table.itemSelectionChanged.connect(self._update_selected_track_details)
 
-        content_layout = QHBoxLayout()
-        content_layout.addWidget(self.table, 2)
-
-        details_group = QGroupBox("Selected track details")
-        details_layout = QVBoxLayout(details_group)
-        self.selected_track_title = QLabel("Select a track to inspect EngineDJ and DDJMMAN data")
-        self.selected_track_meta = QLabel("")
-        self.selected_track_waveform_status = QLabel("EngineDJ overview waveform: unavailable")
-        self.selected_track_waveform = EngineWaveformWidget()
-        self.selected_track_ddj_waveform_status = QLabel("DDJMMAN waveform: unavailable")
-        self.selected_track_ddj_waveform = DDJWaveformWidget()
-        self.selected_track_cues = QListWidget()
-        details_layout.addWidget(self.selected_track_title)
-        details_layout.addWidget(self.selected_track_meta)
-        details_layout.addWidget(self.selected_track_waveform_status)
-        details_layout.addWidget(self.selected_track_waveform)
-        details_layout.addWidget(self.selected_track_ddj_waveform_status)
-        details_layout.addWidget(self.selected_track_ddj_waveform)
-        details_layout.addWidget(QLabel("Hot cues"))
-        details_layout.addWidget(self.selected_track_cues, 1)
-
-        content_layout.addWidget(details_group, 1)
-        root.addLayout(content_layout, 1)
+        root.addWidget(self.table, 1)
         self._apply_default_column_widths()
 
         status_layout = QHBoxLayout()
@@ -611,10 +614,21 @@ class MainWindow(QMainWindow):
         self.status_label.setText(f"Synced {len(completed) - len(errors)} tracks; {len(errors)} errors")
         self.progress.setVisible(False)
         self.scan_button.setEnabled(True)
-        self.sync_button.setEnabled(False)
+        completed_by_identity = {result.track.identity: result for result in completed}
+        self.scan_results = [completed_by_identity.get(result.track.identity, result) for result in self.scan_results]
+        self._populate_table(self.scan_results)
+        remaining_updates = any(result.needs_update for result in self.scan_results)
+        self.sync_button.setEnabled(remaining_updates)
         if errors:
-            QMessageBox.warning(self, "Sync complete", "Some tracks failed. Scan again to review errors.")
-        self._scan()
+            first_error = errors[0].error or "Unknown error"
+            QMessageBox.warning(
+                self,
+                "Sync complete",
+                "Some tracks failed. The error is now shown in the Warnings/Error column.\n\n"
+                f"First error: {first_error}",
+            )
+        else:
+            self._scan()
 
     def _populate_table(self, results: list[ScanResult]):
         self.table.setRowCount(len(results))
@@ -639,7 +653,7 @@ class MainWindow(QMainWindow):
 
             check = QTableWidgetItem()
             check.setFlags(check.flags() | Qt.ItemFlag.ItemIsUserCheckable)
-            check.setCheckState(Qt.CheckState.Checked if result.needs_update else Qt.CheckState.Unchecked)
+            check.setCheckState(Qt.CheckState.Checked if result.selected and result.needs_update else Qt.CheckState.Unchecked)
             if row_color is not None:
                 check.setBackground(row_color)
             self.table.setItem(row, 0, check)

@@ -1,6 +1,8 @@
 from pathlib import Path
 
-from engine_dns3700_sync.denon_tags import build_tag_plan
+from mutagen.id3 import ID3
+
+from engine_dns3700_sync.denon_tags import build_tag_plan, read_existing_tags, write_plan_atomic
 from engine_dns3700_sync.models import (
     EngineTrack,
     ExistingTags,
@@ -45,3 +47,34 @@ def test_mapping_to_denon_frames():
     assert plan.txxx["DDJ/STUP"].endswith("1 2 0 ")
     assert plan.standard_text["TBPM"] == "01280"
     assert not any("Auto Loop stores start+BPM only" in warning for warning in plan.warnings)
+
+
+def test_auto_loop_fields_write_and_verify(tmp_path):
+    path = tmp_path / "track.mp3"
+    path.write_bytes(b"")
+    ID3().save(path, v2_version=3)
+    track = EngineTrack(
+        origin_id="1",
+        origin_database_uuid="db",
+        path=path,
+        bpm=128.0,
+        loops=[SavedLoop(1, 132300.0, 220500.0, True, True, "L1")],
+    )
+    mappings = SlotMappings(
+        cue=MappingSource(SourceKind.NONE),
+        slot_1=MappingSource(SourceKind.SAVED_LOOP, 1),
+        slot_2=MappingSource(SourceKind.NONE),
+        slot_3=MappingSource(SourceKind.NONE),
+        ab_loop=MappingSource(SourceKind.NONE),
+    )
+    mpeg = MpegInfo(1000, 44100, 1152, 1959, frozenset({320}))
+    options = SyncOptions(create_backup=False)
+
+    existing = read_existing_tags(path)
+    plan = build_tag_plan(track, mpeg, mappings, options, existing)
+    write_plan_atomic(path, plan, options)
+
+    written = read_existing_tags(path)
+    assert written.txxx["DDJ/H1PT"] == "2700"
+    assert written.txxx["DDJ/H1AP"] == "1280"
+    assert written.txxx["DDJ/STUP"].endswith("2 0 0 ")
