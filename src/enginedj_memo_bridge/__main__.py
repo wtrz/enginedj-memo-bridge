@@ -1,4 +1,4 @@
-from .gui import run_gui
+from enginedj_memo_bridge.gui import run_gui
 
 
 def main() -> int:

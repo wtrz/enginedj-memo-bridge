@@ -1,0 +1,98 @@
+name: Build release artifacts
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    name: Build Windows release
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Install package
+        run: python -m pip install -e ".[dev]"
+
+      - name: Run tests
+        run: python -m pytest
+
+      - name: Build app
+        shell: cmd
+        run: call .uild_windows.bat
+
+      - name: Package app
+        shell: pwsh
+        run: |
+          Compress-Archive -Path "dist\EngineDJ-Memo-Bridge" -DestinationPath "EngineDJ-Memo-Bridge-Windows-x64.zip" -Force
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: EngineDJ-Memo-Bridge-Windows-x64
+          path: EngineDJ-Memo-Bridge-Windows-x64.zip
+
+  build-macos:
+    name: Build macOS release
+    runs-on: macos-latest
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Install package
+        run: python -m pip install -e ".[dev]"
+
+      - name: Run tests
+        run: python -m pytest
+
+      - name: Build app
+        run: ./build_macos.sh
+
+      - name: Package app
+        run: |
+          cd dist
+          ditto -c -k --sequesterRsrc --keepParent "EngineDJ Memo Bridge.app" "../EngineDJ-Memo-Bridge-macOS.zip"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: EngineDJ-Memo-Bridge-macOS
+          path: EngineDJ-Memo-Bridge-macOS.zip
+
+  publish-release:
+    name: Publish GitHub release
+    needs: [build-windows, build-macos]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-artifacts
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release-artifacts/**/*.zip
+          generate_release_notes: true

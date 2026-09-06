@@ -53,9 +53,11 @@ EngineDJ Memo Bridge is a Windows-oriented manual GUI sync tool that reads Engin
 
 Current inspected DN-S3700 memo files show numbered Auto Loop slots storing the start point, BPM and slot type only. No Auto Loop beat-size or loop-end field has been identified in the MP3 memo data. Therefore saved-loop-to-numbered-slot mapping preserves the loop start+BPM only. Use the separate DN A/B loop mapping when exact Engine loop start/end must be preserved.
 
-## Installation
+## Installation from source
 
-Install Python 3.11+ and ffmpeg. Ensure `ffmpeg.exe` is on `PATH`.
+Install Python 3.11+ and ffmpeg. Ensure `ffmpeg` / `ffmpeg.exe` is on `PATH`.
+
+On Windows:
 
 ```powershell
 cd enginedj-memo-bridge
@@ -64,6 +66,63 @@ py -m enginedj_memo_bridge
 ```
 
 Or run `run.bat`.
+
+On macOS/Linux:
+
+```bash
+cd enginedj-memo-bridge
+python3 -m pip install -e .
+python3 -m enginedj_memo_bridge
+```
+
+## Building packaged apps
+
+Packaged desktop builds are platform-specific. Build Windows on Windows and macOS on macOS.
+
+### Windows
+
+```bat
+build_windows.bat
+```
+
+The Windows build output is:
+
+```text
+dist\EngineDJ-Memo-Bridge\EngineDJ-Memo-Bridge.exe
+```
+
+If you move or share the Windows build, zip/copy the whole folder:
+
+```text
+dist\EngineDJ-Memo-Bridge\
+```
+
+Do not copy only the `.exe`; it needs the `_internal` folder next to it.
+
+### macOS
+
+```bash
+./build_macos.sh
+```
+
+The macOS build output is:
+
+```text
+dist/EngineDJ Memo Bridge.app
+```
+
+Unsigned macOS builds may require right-clicking the app and choosing **Open** the first time. Public distribution without Gatekeeper warnings requires Apple code signing and notarization.
+
+## GitHub releases
+
+Release artifacts are built by GitHub Actions when a version tag is pushed:
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+The release workflow builds and uploads Windows and macOS zip files. Keep the tag version aligned with `pyproject.toml`.
 
 ## Recommended workflow
 

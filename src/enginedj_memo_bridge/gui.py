@@ -3,9 +3,10 @@ from __future__ import annotations
 from datetime import datetime, time
 from pathlib import Path
 import subprocess
+import sys
 
 from PySide6.QtCore import QObject, QRunnable, QSettings, Qt, QThreadPool, QDate, QPoint, Signal, Slot
-from PySide6.QtGui import QColor, QPainter, QPainterPath, QPen
+from PySide6.QtGui import QColor, QIcon, QPainter, QPainterPath, QPen
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -37,6 +38,17 @@ from .engine_db import EngineDatabase, default_engine_database
 from .models import EnginePlaylist, MappingSource, ScanResult, SlotMappings, SourceKind, SyncOptions
 from .sync_service import SyncService
 from .waveform import ddj_markers_from_positions, decode_ddm_waveform, decode_engine_overview_waveform, waveform_markers_from_sample_offsets
+
+
+def app_icon_path() -> Path:
+    if getattr(sys, "frozen", False):
+        return Path(getattr(sys, "_MEIPASS", Path(sys.executable).parent)) / "logo-enginedj-memo-bridge.png"
+    return Path(__file__).resolve().parents[2] / "logo-enginedj-memo-bridge.png"
+
+
+def app_icon() -> QIcon:
+    icon_path = app_icon_path()
+    return QIcon(str(icon_path)) if icon_path.exists() else QIcon()
 
 
 class WorkerSignals(QObject):
@@ -186,6 +198,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("EngineDJ Memo Bridge")
+        self.setWindowIcon(app_icon())
         self.resize(1180, 760)
         self.settings = QSettings(self.SETTINGS_ORG, self.SETTINGS_APP)
         self.thread_pool = QThreadPool.globalInstance()
@@ -797,6 +810,7 @@ class MainWindow(QMainWindow):
 
 def run_gui() -> int:
     app = QApplication.instance() or QApplication([])
+    app.setWindowIcon(app_icon())
     window = MainWindow()
     window.show()
     return app.exec()
