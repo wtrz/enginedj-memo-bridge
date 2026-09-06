@@ -288,7 +288,15 @@ class MainWindow(QMainWindow):
 
         action_layout = QHBoxLayout()
         self.scan_button = QPushButton("Scan")
+        self.scan_button.setObjectName("primaryWorkflowButton")
+        self.scan_button.setMinimumHeight(44)
+        self.scan_button.setMinimumWidth(140)
+        self.scan_button.setToolTip("Scan EngineDJ tracks and preview the DDJMMAN ID3 tag changes.")
         self.sync_button = QPushButton("Sync selected DDJMMAN ID3 tags")
+        self.sync_button.setObjectName("syncWorkflowButton")
+        self.sync_button.setMinimumHeight(44)
+        self.sync_button.setMinimumWidth(260)
+        self.sync_button.setToolTip("Write the selected DDJMMAN ID3 tag changes to the source MP3 files.")
         self.sync_button.setEnabled(False)
         self.scan_button.clicked.connect(self._scan)
         self.sync_button.clicked.connect(self._sync)
@@ -297,6 +305,7 @@ class MainWindow(QMainWindow):
         action_layout.addWidget(self.scan_button)
         action_layout.addWidget(self.sync_button)
         action_layout.addStretch(1)
+        self._apply_workflow_button_styles()
         controls_layout.addLayout(action_layout)
         controls_layout.addStretch(1)
 
@@ -374,6 +383,56 @@ class MainWindow(QMainWindow):
         for label, token in entries:
             combo.addItem(label, token)
         return combo
+
+    def _apply_workflow_button_styles(self):
+        self.scan_button.setStyleSheet(
+            """
+            QPushButton#primaryWorkflowButton {
+                background-color: #0067C0;
+                border: 1px solid #005A9E;
+                border-radius: 8px;
+                color: white;
+                font-size: 15px;
+                font-weight: 700;
+                padding: 8px 18px;
+            }
+            QPushButton#primaryWorkflowButton:hover {
+                background-color: #0A78D1;
+            }
+            QPushButton#primaryWorkflowButton:pressed {
+                background-color: #004E8C;
+            }
+            QPushButton#primaryWorkflowButton:disabled {
+                background-color: #B8C7D8;
+                border-color: #AAB8C6;
+                color: #F3F6F8;
+            }
+            """
+        )
+        self.sync_button.setStyleSheet(
+            """
+            QPushButton#syncWorkflowButton {
+                background-color: #198754;
+                border: 1px solid #146C43;
+                border-radius: 8px;
+                color: white;
+                font-size: 15px;
+                font-weight: 700;
+                padding: 8px 18px;
+            }
+            QPushButton#syncWorkflowButton:hover {
+                background-color: #1FA463;
+            }
+            QPushButton#syncWorkflowButton:pressed {
+                background-color: #0F5132;
+            }
+            QPushButton#syncWorkflowButton:disabled {
+                background-color: #D5D8DC;
+                border-color: #C3C7CB;
+                color: #7B858E;
+            }
+            """
+        )
 
     def _set_combo_token(self, combo: QComboBox, token: str):
         index = combo.findData(token)

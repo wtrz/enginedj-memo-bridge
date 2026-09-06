@@ -18,3 +18,7 @@ dist/
 .DS_Store
 Thumbs.db
 .vscode/
+
+#Press release
+.press_release/
+
