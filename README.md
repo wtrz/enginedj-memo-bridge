@@ -1,52 +1,210 @@
 # EngineDJ Memo Bridge
 
-EngineDJ Memo Bridge is a desktop GUI sync tool, currently developed and tested primarily on Windows, that reads Engine DJ's SQLite database **read-only** and writes DDJMMAN / legacy Denon DN-S3700-style memo data into MP3 ID3 tags before an Engine DJ USB export.
+EngineDJ Memo Bridge is a desktop GUI tool for DJs who want to carry Engine DJ cue and loop work into legacy Denon DJ / DDJMMAN-style MP3 memo tags before exporting to USB.
 
-## Status and important warnings
+The app reads the Engine DJ SQLite database **read-only**, shows a scan preview of the ID3 tag changes it plans to make, and then writes selected DDJMMAN / DN-S3700-style memo data into the original MP3 files.
 
-EngineDJ Memo Bridge is early-release software intended for careful, manual use. It modifies MP3 ID3 tags in-place. Always keep a backup of your music collection before first use and review the scan results before syncing.
+> [!IMPORTANT]
+> This is early-release software. It modifies MP3 ID3 tags in-place. Always keep a backup of your music collection and review scan results before syncing.
 
-Known release limitations:
+## What it does
 
-- MP3 files only; WAV, AIFF and FLAC metadata are not supported yet.
-- DDJMMAN / DN-S3700 numbered Auto Loop slots preserve loop start+BPM only. Use DN A/B loop mapping when exact loop end must be preserved.
-- Generated `DDM/WAVE` waveform data is approximate.
-- Engine DJ schema compatibility is defensive, but new Engine DJ versions should be validated with the built-in schema report.
-- Public Windows/macOS builds are unsigned unless otherwise stated and may show operating system security warnings.
+EngineDJ Memo Bridge helps bridge this workflow:
+
+1. Edit/analyze tracks, cues and loops in Engine DJ.
+2. Scan your Engine DJ library with EngineDJ Memo Bridge.
+3. Preview which MP3 files need DDJMMAN / Denon memo tag updates.
+4. Write selected ID3 tag updates into the source MP3 files.
+5. Export the updated source files to USB using Engine DJ.
+
+The Engine DJ database itself is never modified.
+
+## Download
+
+Packaged builds are published from GitHub Releases when release tags are built successfully.
+
+Typical release artifacts are:
+
+- `EngineDJ-Memo-Bridge-Windows-x64.zip`
+- `EngineDJ-Memo-Bridge-macOS-x64.zip`
+
+### Windows
+
+Download and extract the Windows ZIP, then run:
+
+```text
+EngineDJ-Memo-Bridge\EngineDJ-Memo-Bridge.exe
+```
+
+Do not move or copy only the `.exe`; it needs the `_internal` folder next to it.
+
+### macOS
+
+Download and extract the macOS ZIP, then open:
+
+```text
+EngineDJ Memo Bridge.app
+```
+
+Unsigned macOS builds may require right-clicking the app and choosing **Open** the first time. Public distribution without Gatekeeper warnings requires Apple code signing and notarization.
+
+### Security warnings
+
+Public builds are unsigned unless a release explicitly says otherwise. Windows SmartScreen, Microsoft Defender, or macOS Gatekeeper may warn that the publisher/developer cannot be verified.
+
+## Quick start
+
+1. Make a backup of your music collection before first use.
+2. Finish analysis, cue and loop editing in Engine DJ.
+3. Avoid running this tool while Engine DJ is actively analyzing files or exporting to USB.
+4. Open EngineDJ Memo Bridge.
+5. Select your Engine DJ `m.db` database if it is not found automatically.
+6. Choose a date filter, playlist filter and cue/loop mappings.
+7. Click **Scan**.
+8. Review warnings, differences and selected tracks.
+9. Click **Sync selected DDJMMAN ID3 tags**.
+10. Confirm the write operation.
+11. Export the already-tagged music to USB from Engine DJ.
 
 ## Features
 
-- Remembers the Engine DJ `m.db` location with Qt `QSettings`.
-- Defaults to `~/Music/Engine Library/Database2/m.db`, with OneDrive Music fallbacks.
-- Filters Engine tracks using `Track.lastEditTime` and a date picker when that column exists.
-- Reads Engine metadata, quick cues, main cue and saved-loop blobs using a Python implementation of the structures documented by `libdjinterop`.
-- Lets the user map:
-  - DN Cue
-  - DN Slot 1
-  - DN Slot 2
-  - DN Slot 3
-  - DN A/B loop
-- Any Engine Hot Cue 1-8 can map to a DN Hot Start slot.
-- Any Engine Saved Loop 1-8 can map to the DN A/B loop.
-- Engine saved loops can map to a numbered DN Auto Loop slot as start+BPM only; use DN A/B loop when exact loop length must be preserved.
+- Reads Engine DJ `m.db` read-only.
+- Remembers the selected database location with Qt settings.
+- Auto-detects common Engine DJ database locations, including OneDrive Music paths.
+- Filters tracks by Engine DJ modification date when available.
+- Optionally filters tracks by Engine DJ playlist.
+- Maps Engine DJ main cue, Hot Cues 1-8 and Saved Loops 1-8 to legacy Denon memo targets.
+- Supports smart mapping for common cue/loop layouts.
 - Scans first and shows only actual ID3 differences.
 - Requires confirmation before writing selected ID3 changes.
-- Writes source MP3 files atomically and verifies the written tags.
-- Optional full-file backup.
-- Creates an approximate 320-byte `DDM/WAVE` waveform when missing.
-- Generates a schema report to diagnose future Engine DJ schema changes.
+- Writes source MP3 files atomically and verifies written tags.
+- Can create optional full-file backups before writing.
+- Can create an approximate 320-byte `DDM/WAVE` waveform when missing.
+- Includes an Engine DJ schema report tool for diagnosing database compatibility.
 
-### Current waveform understanding
+## Supported platforms
 
-- EngineDJ overview waveforms appear to store three-band magnitude points plus timing metadata.
-- Community DDJMMAN / DN-style waveform observations suggest the rendered colours roughly track these frequency regions:
-  - blue: ~20-500 Hz
-  - green: ~500-2000 Hz
-  - white: ~2000-20000 Hz
-- The visual result appears blended rather than using perfectly hard crossover boundaries.
-- The current `DDM/WAVE` writer is still approximate and should not yet be treated as a confirmed frequency-band-faithful reproduction of Denon DJ Music Manager output.
+| Platform | Status |
+|---|---|
+| Windows x64 | Primary tested platform |
+| macOS x64 | Build workflow included; unsigned public beta support |
+| Linux | Source/development use only unless otherwise stated |
 
-## Known Denon tag mapping
+Packaged apps are platform-specific. Windows builds must be made on Windows, and macOS builds must be made on macOS.
+
+## Supported file types
+
+| File type | Status |
+|---|---|
+| MP3 | Supported |
+| WAV | Not supported yet |
+| AIFF | Not supported yet |
+| FLAC | Not supported yet |
+
+## Known limitations
+
+- This is an early public beta; test on a small subset of files before using it on a large collection.
+- MP3 ID3 tags are modified in-place after confirmation.
+- Numbered DDJMMAN / DN-S3700 Auto Loop slots preserve loop start+BPM only. Use DN A/B loop mapping when exact Engine loop start/end must be preserved.
+- Generated `DDM/WAVE` waveform data is approximate and should not be treated as a verified Denon DJ Music Manager reproduction.
+- VBR MP3 files are shown with a warning because legacy DN-S3700 memo recall may be unreliable.
+- External-drive path remapping is limited; missing files are shown in the scan results.
+- Engine DJ schema compatibility is defensive, but new Engine DJ versions should be validated with the built-in schema report.
+- USB replacement behavior should be verified with your Engine DJ version and workflow.
+
+## Safety and compatibility
+
+- The Engine DJ database is opened with SQLite `mode=ro` and `PRAGMA query_only=ON`.
+- No Engine DJ database tables, triggers or data are created or modified.
+- MP3 writes are made to a temporary same-folder copy, verified, then atomically replace the source file.
+- The final source file modification time is updated so Engine DJ Sync Manager can detect a changed file even when ID3 padding keeps the file size identical.
+- Existing ID3v2.3/v2.4 major version is preserved when possible.
+- Optional backups are complete file copies stored under `~/Music/EngineDJ Memo Bridge Backups`.
+
+## Installing from source
+
+Install Python 3.11+ and ffmpeg. Ensure `ffmpeg` / `ffmpeg.exe` is on `PATH`.
+
+On Windows:
+
+```powershell
+cd enginedj-memo-bridge
+py -m pip install -e .
+py -m enginedj_memo_bridge
+```
+
+Or run:
+
+```bat
+run.bat
+```
+
+On macOS/Linux:
+
+```bash
+cd enginedj-memo-bridge
+python3 -m pip install -e .
+python3 -m enginedj_memo_bridge
+```
+
+## Building from source
+
+Install development dependencies:
+
+```bash
+python -m pip install -e ".[dev]"
+```
+
+### Windows build
+
+```bat
+build_windows.bat
+```
+
+Output:
+
+```text
+dist\EngineDJ-Memo-Bridge\EngineDJ-Memo-Bridge.exe
+```
+
+When sharing the Windows build, zip/copy the whole folder:
+
+```text
+dist\EngineDJ-Memo-Bridge\
+```
+
+### macOS build
+
+```bash
+./build_macos.sh
+```
+
+Output:
+
+```text
+dist/EngineDJ Memo Bridge.app
+```
+
+## Development
+
+Run tests:
+
+```bash
+python -m pytest
+```
+
+Release artifacts are built by GitHub Actions when a version tag is pushed:
+
+```bash
+git tag v0.1.3
+git push origin v0.1.3
+```
+
+Keep the tag version aligned with `pyproject.toml` and `src/enginedj_memo_bridge/__init__.py`.
+
+## Technical notes
+
+### Known Denon tag mapping
 
 | Purpose | Tag |
 |---|---|
@@ -62,113 +220,15 @@ Known release limitations:
 | Waveform | `TXXX:DDM/WAVE`, exactly 320 low-value bytes |
 | BPM | `TBPM`, BPM × 10, padded to five digits |
 
-## Important limitation: Auto Loop length
+### Current waveform understanding
 
-Current inspected DN-S3700 memo files show numbered Auto Loop slots storing the start point, BPM and slot type only. No Auto Loop beat-size or loop-end field has been identified in the MP3 memo data. Therefore saved-loop-to-numbered-slot mapping preserves the loop start+BPM only. Use the separate DN A/B loop mapping when exact Engine loop start/end must be preserved.
-
-## Installation from source
-
-Install Python 3.11+ and ffmpeg. Ensure `ffmpeg` / `ffmpeg.exe` is on `PATH`.
-
-On Windows:
-
-```powershell
-cd enginedj-memo-bridge
-py -m pip install -e .
-py -m enginedj_memo_bridge
-```
-
-Or run `run.bat`.
-
-On macOS/Linux:
-
-```bash
-cd enginedj-memo-bridge
-python3 -m pip install -e .
-python3 -m enginedj_memo_bridge
-```
-
-## Building packaged apps
-
-Packaged desktop builds are platform-specific. Build Windows on Windows and macOS on macOS.
-
-### Windows
-
-```bat
-build_windows.bat
-```
-
-The Windows build output is:
-
-```text
-dist\EngineDJ-Memo-Bridge\EngineDJ-Memo-Bridge.exe
-```
-
-If you move or share the Windows build, zip/copy the whole folder:
-
-```text
-dist\EngineDJ-Memo-Bridge\
-```
-
-Do not copy only the `.exe`; it needs the `_internal` folder next to it.
-
-### macOS
-
-```bash
-./build_macos.sh
-```
-
-The macOS build output is:
-
-```text
-dist/EngineDJ Memo Bridge.app
-```
-
-Unsigned macOS builds may require right-clicking the app and choosing **Open** the first time. Public distribution without Gatekeeper warnings requires Apple code signing and notarization.
-
-## GitHub releases
-
-Release artifacts are built by GitHub Actions when a version tag is pushed:
-
-```bash
-git tag v0.1.3
-git push origin v0.1.3
-```
-
-The release workflow builds and uploads Windows and macOS zip files. Keep the tag version aligned with `pyproject.toml`.
-
-## Recommended workflow
-
-1. Make a backup of the music collection before first use.
-2. Finish analysis, cue and loop editing in Engine DJ.
-3. Avoid running this tool while Engine DJ is actively analyzing files or exporting to USB.
-4. Open the sync tool.
-5. Choose the modification date and mappings.
-6. Click **Scan**.
-7. Review warnings and selected tracks.
-8. Click **Sync selected ID3 tags**.
-9. Export the already-tagged music to USB from Engine DJ.
-
-## Safety and compatibility
-
-- The Engine database is opened with SQLite `mode=ro` and `PRAGMA query_only=ON`.
-- No tables, triggers or stored data are added to Engine DJ.
-- MP3 writes are made to a temporary same-folder copy, verified, then atomically replace the source. The final file modification time is explicitly updated so USB sync can detect a changed source even when ID3 padding keeps the size unchanged.
-- Existing ID3v2.3/v2.4 major version is preserved.
-- The current release supports MP3 only. WAV, AIFF and FLAC metadata are future work.
-- VBR tracks are shown with a warning because legacy DN-S3700 memo behavior may be unreliable.
-- The current `libdjinterop` public support matrix ends at Engine DJ Desktop 4.3.0. This project therefore introspects the actual schema and includes a schema-report function rather than assuming all later versions are identical.
-
-## Additional design decisions worth considering
-
-1. **Playlist scope:** date filtering can include many irrelevant tracks. Add Engine playlist/crate selection next.
-2. **Auto Loop length:** collect controlled DN-S3700 samples for 1, 2, 4, 8 and 16 beat loops and complete the `STUP` mapping.
-3. **Variable-tempo tracks:** `HnAP/L1AP` currently uses track BPM. A per-position beat-grid BPM lookup would be more accurate.
-4. **File path resolution:** external drives can use paths different from the main collection. Schema report and missing-file display help, but mounted-drive remapping should be added.
-5. **USB preflight:** add a final report for unsupported sample rates, VBR, missing files and invalid tag lengths.
-6. **Undo:** the optional complete-file backup is safe but space-heavy. A dedicated ID3-only backup/restore format would be smaller.
-7. **Engine DJ 5.x validation:** test against a real current `m.db`; the application intentionally fails visibly instead of guessing when blobs or columns change.
-8. **USB replacement verification:** test one already-exported track end-to-end. Community reports indicate Sync Manager recopies changed source audio/tag files, but the app should eventually verify the resulting USB file rather than assuming every Engine DJ version behaves identically.
+- Engine DJ overview waveforms appear to store three-band magnitude points plus timing metadata.
+- Community DDJMMAN / DN-style waveform observations suggest rendered colours roughly track these frequency regions:
+  - blue: ~20-500 Hz
+  - green: ~500-2000 Hz
+  - white: ~2000-20000 Hz
+- The visual result appears blended rather than using perfectly hard crossover boundaries.
+- The current `DDM/WAVE` writer is approximate.
 
 ## Attribution
 
