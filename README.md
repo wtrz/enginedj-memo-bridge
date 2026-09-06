@@ -1,11 +1,23 @@
 # EngineDJ Memo Bridge
 
-EngineDJ Memo Bridge is a Windows-oriented manual GUI sync tool that reads Engine DJ's SQLite database **read-only** and writes DDJMMAN / legacy Denon DN-S3700-style memo data into the original MP3 files before an Engine DJ USB export.
+EngineDJ Memo Bridge is a desktop GUI sync tool, currently developed and tested primarily on Windows, that reads Engine DJ's SQLite database **read-only** and writes DDJMMAN / legacy Denon DN-S3700-style memo data into MP3 ID3 tags before an Engine DJ USB export.
 
-## Current MVP
+## Status and important warnings
+
+EngineDJ Memo Bridge is early-release software intended for careful, manual use. It modifies MP3 ID3 tags in-place. Always keep a backup of your music collection before first use and review the scan results before syncing.
+
+Known release limitations:
+
+- MP3 files only; WAV, AIFF and FLAC metadata are not supported yet.
+- DDJMMAN / DN-S3700 numbered Auto Loop slots preserve loop start+BPM only. Use DN A/B loop mapping when exact loop end must be preserved.
+- Generated `DDM/WAVE` waveform data is approximate.
+- Engine DJ schema compatibility is defensive, but new Engine DJ versions should be validated with the built-in schema report.
+- Public Windows/macOS builds are unsigned unless otherwise stated and may show operating system security warnings.
+
+## Features
 
 - Remembers the Engine DJ `m.db` location with Qt `QSettings`.
-- Defaults to `~/Music/Engine Library/Database2/m.db`, with a OneDrive Music fallback.
+- Defaults to `~/Music/Engine Library/Database2/m.db`, with OneDrive Music fallbacks.
 - Filters Engine tracks using `Track.lastEditTime` and a date picker when that column exists.
 - Reads Engine metadata, quick cues, main cue and saved-loop blobs using a Python implementation of the structures documented by `libdjinterop`.
 - Lets the user map:
@@ -14,10 +26,11 @@ EngineDJ Memo Bridge is a Windows-oriented manual GUI sync tool that reads Engin
   - DN Slot 2
   - DN Slot 3
   - DN A/B loop
-- Any Engine Hot Cue 1–8 can map to a DN Hot Start slot.
-- Any Engine Saved Loop 1–8 can map to the DN A/B loop.
+- Any Engine Hot Cue 1-8 can map to a DN Hot Start slot.
+- Any Engine Saved Loop 1-8 can map to the DN A/B loop.
 - Engine saved loops can map to a numbered DN Auto Loop slot as start+BPM only; use DN A/B loop when exact loop length must be preserved.
 - Scans first and shows only actual ID3 differences.
+- Requires confirmation before writing selected ID3 changes.
 - Writes source MP3 files atomically and verifies the written tags.
 - Optional full-file backup.
 - Creates an approximate 320-byte `DDM/WAVE` waveform when missing.
@@ -118,8 +131,8 @@ Unsigned macOS builds may require right-clicking the app and choosing **Open** t
 Release artifacts are built by GitHub Actions when a version tag is pushed:
 
 ```bash
-git tag v0.1.0
-git push origin v0.1.0
+git tag v0.1.3
+git push origin v0.1.3
 ```
 
 The release workflow builds and uploads Windows and macOS zip files. Keep the tag version aligned with `pyproject.toml`.
@@ -142,7 +155,7 @@ The release workflow builds and uploads Windows and macOS zip files. Keep the ta
 - No tables, triggers or stored data are added to Engine DJ.
 - MP3 writes are made to a temporary same-folder copy, verified, then atomically replace the source. The final file modification time is explicitly updated so USB sync can detect a changed source even when ID3 padding keeps the size unchanged.
 - Existing ID3v2.3/v2.4 major version is preserved.
-- The MVP supports MP3 only. WAV metadata is a future task.
+- The current release supports MP3 only. WAV, AIFF and FLAC metadata are future work.
 - VBR tracks are shown with a warning because legacy DN-S3700 memo behavior may be unreliable.
 - The current `libdjinterop` public support matrix ends at Engine DJ Desktop 4.3.0. This project therefore introspects the actual schema and includes a schema-report function rather than assuming all later versions are identical.
 

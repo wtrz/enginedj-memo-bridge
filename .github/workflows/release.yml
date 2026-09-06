@@ -46,8 +46,8 @@ jobs:
           path: EngineDJ-Memo-Bridge-Windows-x64.zip
 
   build-macos:
-    name: Build macOS release
-    runs-on: macos-latest
+    name: Build macOS x64 release
+    runs-on: macos-13
 
     steps:
       - name: Check out source
@@ -71,13 +71,13 @@ jobs:
       - name: Package app
         run: |
           cd dist
-          ditto -c -k --sequesterRsrc --keepParent "EngineDJ Memo Bridge.app" "../EngineDJ-Memo-Bridge-macOS.zip"
+          ditto -c -k --sequesterRsrc --keepParent "EngineDJ Memo Bridge.app" "../EngineDJ-Memo-Bridge-macOS-x64.zip"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: EngineDJ-Memo-Bridge-macOS
-          path: EngineDJ-Memo-Bridge-macOS.zip
+          name: EngineDJ-Memo-Bridge-macOS-x64
+          path: EngineDJ-Memo-Bridge-macOS-x64.zip
 
   publish-release:
     name: Publish GitHub release

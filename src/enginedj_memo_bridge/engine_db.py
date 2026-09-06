@@ -38,6 +38,7 @@ def default_engine_database() -> Path:
     candidates = [
         Path.home() / "Music" / "Engine Library" / "Database2" / "m.db",
         Path.home() / "OneDrive" / "Music" / "Engine Library" / "Database2" / "m.db",
+        Path.home() / "OneDrive - Personal" / "Music" / "Engine Library" / "Database2" / "m.db",
     ]
     return next((candidate for candidate in candidates if candidate.exists()), candidates[0])
 

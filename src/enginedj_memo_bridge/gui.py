@@ -653,6 +653,33 @@ class MainWindow(QMainWindow):
         for row, result in enumerate(self.scan_results):
             item = self.table.item(row, 0)
             result.selected = bool(item and item.checkState() == Qt.CheckState.Checked)
+
+        selected_updates = [result for result in self.scan_results if result.selected and result.needs_update]
+        if not selected_updates:
+            QMessageBox.information(self, "Sync selected ID3 tags", "No selected tracks require an update.")
+            return
+
+        options = self._options()
+        backup_status = "Enabled" if options.create_backup else "Disabled"
+        backup_location = str(options.backup_directory) if options.create_backup and options.backup_directory else "Not used"
+        warning = ""
+        if not options.create_backup:
+            warning = "\n\nBackup is disabled. Make sure you have your own music backup before continuing."
+
+        response = QMessageBox.question(
+            self,
+            "Confirm ID3 tag sync",
+            f"You are about to write DDJMMAN ID3 tags to {len(selected_updates)} source MP3 file(s).\n\n"
+            "This modifies the original music files in-place.\n\n"
+            f"Backup: {backup_status}\n"
+            f"Backup folder: {backup_location}"
+            f"{warning}\n\nContinue?",
+            QMessageBox.StandardButton.Cancel | QMessageBox.StandardButton.Yes,
+            QMessageBox.StandardButton.Cancel,
+        )
+        if response != QMessageBox.StandardButton.Yes:
+            return
+
         worker = Worker(self._service().sync, self.scan_results)
         self._start_worker(worker, self._sync_finished)
 
