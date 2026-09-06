@@ -33,7 +33,7 @@ A Windows-oriented manual GUI sync tool that reads Engine DJ's SQLite database *
   - DN A/B loop
 - Any Engine Hot Cue 1–8 can map to a DN Hot Start slot.
 - Any Engine Saved Loop 1–8 can map to the DN A/B loop.
-- Engine saved loops can experimentally map to a numbered DN Auto Loop slot.
+- Engine saved loops can map to a numbered DN Auto Loop slot as start+BPM only; use DN A/B loop when exact loop length must be preserved.
 - Scans first and shows only actual ID3 differences.
 - Writes source MP3 files atomically and verifies the written tags.
 - Optional full-file backup.
@@ -68,7 +68,7 @@ A Windows-oriented manual GUI sync tool that reads Engine DJ's SQLite database *
 
 ## Important limitation: Auto Loop length
 
-The captured DN-S3700 file proves the Auto Loop slot type, start and BPM fields. The exact encoding of the selected Auto Loop beat length is not yet isolated. Therefore saved-loop-to-numbered-slot mapping is labelled **experimental**. Exact Engine loop start/end is supported through the separate DN A/B loop mapping.
+Current inspected DN-S3700 memo files show numbered Auto Loop slots storing the start point, BPM and slot type only. No Auto Loop beat-size or loop-end field has been identified in the MP3 memo data. Therefore saved-loop-to-numbered-slot mapping preserves the loop start+BPM only. Use the separate DN A/B loop mapping when exact Engine loop start/end must be preserved.
 
 ## Installation
 

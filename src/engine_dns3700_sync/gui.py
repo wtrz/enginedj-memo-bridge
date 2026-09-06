@@ -345,7 +345,7 @@ class MainWindow(QMainWindow):
     def _slot_sources(self):
         result = [("None", "none"), ("Engine main cue", "main_cue")]
         result += [(f"Engine Hot Cue {i} → Hot Start", f"hot_cue:{i}") for i in range(1, 9)]
-        result += [(f"Engine Saved Loop {i} → Auto Loop start+BPM only", f"saved_loop:{i}") for i in range(1, 9)]
+        result += [(f"Engine Saved Loop {i} → Auto Loop start", f"saved_loop:{i}") for i in range(1, 9)]
         return result
 
     def _loop_sources(self):
