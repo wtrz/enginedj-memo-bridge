@@ -32,7 +32,7 @@ jobs:
 
       - name: Build app
         shell: cmd
-        run: call .uild_windows.bat
+        run: call ./build_windows.bat
 
       - name: Package app
         shell: pwsh
