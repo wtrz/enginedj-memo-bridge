@@ -23,10 +23,9 @@ The Engine DJ database itself is never modified.
 
 Packaged builds are published from GitHub Releases when release tags are built successfully.
 
-Typical release artifacts are:
+Current public release artifacts are:
 
 - `EngineDJ-Memo-Bridge-Windows-x64.zip`
-- `EngineDJ-Memo-Bridge-macOS-x64.zip`
 
 ### Windows
 
@@ -40,17 +39,11 @@ Do not move or copy only the `.exe`; it needs the `_internal` folder next to it.
 
 ### macOS
 
-Download and extract the macOS ZIP, then open:
-
-```text
-EngineDJ Memo Bridge.app
-```
-
-Unsigned macOS builds may require right-clicking the app and choosing **Open** the first time. Public distribution without Gatekeeper warnings requires Apple code signing and notarization.
+macOS app releases are disabled for now while packaging and runner compatibility are validated. macOS users can still run from source if they are comfortable installing Python dependencies manually.
 
 ### Security warnings
 
-Public builds are unsigned unless a release explicitly says otherwise. Windows SmartScreen, Microsoft Defender, or macOS Gatekeeper may warn that the publisher/developer cannot be verified.
+Public Windows builds are unsigned unless a release explicitly says otherwise. Windows SmartScreen or Microsoft Defender may warn that the publisher cannot be verified.
 
 ## Quick start
 
@@ -87,10 +80,10 @@ Public builds are unsigned unless a release explicitly says otherwise. Windows S
 | Platform | Status |
 |---|---|
 | Windows x64 | Primary tested platform |
-| macOS x64 | Build workflow included; unsigned public beta support |
+| macOS | Source use only for now; packaged app releases are disabled |
 | Linux | Source/development use only unless otherwise stated |
 
-Packaged apps are platform-specific. Windows builds must be made on Windows, and macOS builds must be made on macOS.
+Packaged app releases currently target Windows only. The macOS build script remains in the repository for future validation.
 
 ## Supported file types
 
@@ -174,6 +167,8 @@ dist\EngineDJ-Memo-Bridge\
 ```
 
 ### macOS build
+
+The macOS build script is kept for development/testing, but GitHub release artifacts for macOS are disabled for now.
 
 ```bash
 ./build_macos.sh

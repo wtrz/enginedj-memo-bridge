@@ -45,43 +45,9 @@ jobs:
           name: EngineDJ-Memo-Bridge-Windows-x64
           path: EngineDJ-Memo-Bridge-Windows-x64.zip
 
-  build-macos:
-    name: Build macOS x64 release
-    runs-on: macos-15-intel
-
-    steps:
-      - name: Check out source
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-          cache: pip
-
-      - name: Install package
-        run: python -m pip install -e ".[dev]"
-
-      - name: Run tests
-        run: python -m pytest
-
-      - name: Build app
-        run: ./build_macos.sh
-
-      - name: Package app
-        run: |
-          cd dist
-          ditto -c -k --sequesterRsrc --keepParent "EngineDJ Memo Bridge.app" "../EngineDJ-Memo-Bridge-macOS-x64.zip"
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: EngineDJ-Memo-Bridge-macOS-x64
-          path: EngineDJ-Memo-Bridge-macOS-x64.zip
-
   publish-release:
     name: Publish GitHub release
-    needs: [build-windows, build-macos]
+    needs: [build-windows]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
 
