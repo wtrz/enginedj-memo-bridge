@@ -103,6 +103,10 @@ def _normalise_file_url(value: str) -> str:
     return unquote(value)
 
 
+def _is_windows_absolute_path(value: str) -> bool:
+    return len(value) >= 3 and value[0].isalpha() and value[1] == ":" and value[2] in ("/", "\\")
+
+
 def _resolve_path(path_value: object, filename_value: object, db_path: Path) -> Path:
     raw_path = _normalise_file_url(_clean_text(path_value))
     filename = _clean_text(filename_value)
@@ -111,7 +115,7 @@ def _resolve_path(path_value: object, filename_value: object, db_path: Path) -> 
         candidate = Path(raw_path)
         if filename and candidate.name.lower() != filename.lower():
             candidate = candidate / filename
-        if candidate.is_absolute():
+        if candidate.is_absolute() or _is_windows_absolute_path(str(candidate)):
             return candidate
 
         # Engine media databases can contain relative paths. Try likely roots.
