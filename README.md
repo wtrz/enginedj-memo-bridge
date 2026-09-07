@@ -1,3 +1,5 @@
+![EngineDJ Memo Bridge](press_release/repository-banner.png)
+
 # EngineDJ Memo Bridge
 
 EngineDJ Memo Bridge is a desktop GUI tool for DJs who want to carry Engine DJ cue and loop work into legacy Denon DJ / DDJMMAN-style MP3 memo tags before exporting to USB.
