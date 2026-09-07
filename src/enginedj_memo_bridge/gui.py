@@ -112,6 +112,16 @@ def apply_engine_dark_theme(app: QApplication):
             border-color: #2EA8FF;
         }
 
+        QLineEdit:disabled, QComboBox:disabled, QDateEdit:disabled, QTextEdit:disabled {
+            background-color: #0E141B;
+            border-color: #202A36;
+            color: #65717E;
+        }
+
+        QLabel:disabled {
+            color: #65717E;
+        }
+
         QComboBox::drop-down, QDateEdit::drop-down {
             border-left: 1px solid #314052;
             width: 24px;
@@ -421,11 +431,15 @@ class MainWindow(QMainWindow):
         self.slot3_combo = self._make_combo(self._slot_sources())
         self.ab_combo = self._make_combo(self._loop_sources())
         self.smart_mapping = QCheckBox("Use smart mapping")
-        mapping_layout.addRow("DN Cue", self.cue_combo)
-        mapping_layout.addRow("DN Slot 1", self.slot1_combo)
-        mapping_layout.addRow("DN Slot 2", self.slot2_combo)
-        mapping_layout.addRow("DN Slot 3", self.slot3_combo)
-        mapping_layout.addRow("DN A/B loop", self.ab_combo)
+        self.mapping_controls = [
+            (QLabel("DN Cue"), self.cue_combo),
+            (QLabel("DN Slot 1"), self.slot1_combo),
+            (QLabel("DN Slot 2"), self.slot2_combo),
+            (QLabel("DN Slot 3"), self.slot3_combo),
+            (QLabel("DN A/B loop"), self.ab_combo),
+        ]
+        for label, combo in self.mapping_controls:
+            mapping_layout.addRow(label, combo)
         mapping_layout.addRow("", self.smart_mapping)
         self.smart_mapping.toggled.connect(self._update_mapping_controls)
         controls_layout.addWidget(mapping_group)
@@ -646,8 +660,10 @@ class MainWindow(QMainWindow):
         self.settings.sync()
 
     def _update_mapping_controls(self, smart_enabled: bool):
-        for widget in (self.cue_combo, self.slot1_combo, self.slot2_combo, self.slot3_combo, self.ab_combo):
-            widget.setEnabled(not smart_enabled)
+        enabled = not smart_enabled
+        for label, combo in self.mapping_controls:
+            label.setEnabled(enabled)
+            combo.setEnabled(enabled)
 
     def _apply_default_column_widths(self):
         widths = {

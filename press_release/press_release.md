@@ -20,6 +20,8 @@ That makes a few interesting things possible:
 - keep the Engine DJ database untouched
 - export the already-tagged files to USB afterwards
 
+![Usage](https://raw.githubusercontent.com/wtrz/enginedj-memo-bridge/main/press_release/usage1.png)
+
 At the moment, the tool supports:
 
 - **Engine DJ `m.db`** read-only scanning
